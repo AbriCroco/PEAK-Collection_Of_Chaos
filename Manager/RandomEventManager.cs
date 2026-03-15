@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -210,7 +211,7 @@ namespace Chaos.Manager
             {
                 if (AllowScoutmasterTimer || AllowDynamiteTimer)
                 {
-                    scoutmasterTimer?.PassportCheckAfterLoad();
+                    StartCoroutine(CheckPlayer());
                 }
             }
         }
@@ -230,6 +231,14 @@ namespace Chaos.Manager
             string masterName = newMasterClient != null ? newMasterClient.name : "null";
             ModLogger.Log("[RandomEventManager] OnMasterClientSwitched: " + masterName);
             scoutmasterTimer?.OnMasterChanged(PhotonNetwork.IsMasterClient);
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                if (AllowScoutmasterTimer || AllowDynamiteTimer)
+                {
+                    scoutmasterTimer?.PassportCheckAfterLoad();
+                }
+            }
         }
 
         // ----------------------------
@@ -562,6 +571,21 @@ namespace Chaos.Manager
                     { KeyCode.H, 0 },
                 };
             }
+        }
+
+        private IEnumerator CheckPlayer()
+        {
+            yield return new WaitForSecondsRealtime(20f);
+            if (PlayerHandler.GetAllPlayers().Skip(1).Any())
+            {
+                scoutmasterTimer?.PassportCheckAfterLoad();
+            }
+            else
+            {
+              ModLogger.Log("[RandomEventManager] Only one player, skipping coroutine");
+            }
+
+            yield return null;
         }
 
         // ----------------------------
